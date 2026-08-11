@@ -12,17 +12,18 @@ DentMemo is a mobile-first clinic memory system for a single independent dentist
 - Calendar, follow-ups, insights, settings and role preview
 - Supabase-ready authentication helpers
 - Multi-clinic Postgres schema with Row Level Security
+- Live Supabase query layer for clinics, patients, appointments and follow-ups
 - No file uploads in this MVP
 
 ## Run locally
 
 1. Install Node.js 22+.
 2. Run `npm install`.
-3. Copy `.env.example` to `.env.local` and add Supabase project values.
+3. Copy `.env.example` to `.env.local` and add the Supabase project URL and publishable key.
 4. Run the SQL in `supabase/migrations/202608110001_initial_schema.sql` using the Supabase dashboard or CLI.
 5. Run `npm run dev`.
 
-Without environment values the product UI remains usable as a demo. With Supabase values, use the helpers under `lib/supabase` while replacing the demo arrays screen-by-screen.
+Without environment values the product UI remains usable as a demo. The production tables use the `dm_` prefix so the earlier prototype records remain untouched during migration.
 
 ## Safety rules for future Codex work
 
