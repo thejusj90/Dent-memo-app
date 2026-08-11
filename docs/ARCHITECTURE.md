@@ -11,7 +11,7 @@
 
 ## Tenant boundary
 
-Every business record has `clinic_id`. Access is derived from `clinic_members`, never from a clinic ID supplied by the browser alone. RLS is the final enforcement layer.
+Every business record has `clinic_id`. Production tables use a `dm_` prefix and access is derived from `dm_clinic_members`, never from a clinic ID supplied by the browser alone. RLS is the final enforcement layer. Existing prototype tables are preserved until their records are deliberately migrated.
 
 | Role | Patient basics | Appointments | Clinical notes/plans | Payments | Team/settings | Insights |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -29,4 +29,3 @@ The first schema is intentionally file-free. Google event IDs and reminder deliv
 4. Add invitation-based assistant and consultant onboarding.
 5. Add Calendar OAuth and webhooks.
 6. Add one-way WhatsApp templates and a scheduled reminder worker.
-
