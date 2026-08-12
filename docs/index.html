@@ -746,6 +746,25 @@ nav::-webkit-scrollbar{display:none}
 
 <script>
 const SB_URL='https://bpatdayxcyazozdqbasf.supabase.co';
+const DIRECT_MODE=true, DIRECT_KEY='dentmemo_direct_data_v1';
+const nativeFetch=window.fetch.bind(window);
+window.fetch=async function(url,opt={}){
+  if(DIRECT_MODE&&String(url).startsWith(SB_URL+'/rest/v1/')&&opt.method){
+    let body={};try{body=JSON.parse(opt.body||'{}')}catch(e){}
+    if(opt.method==='POST'&&!body.id)body.id=Date.now();
+    return {ok:true,status:200,json:async()=>[body],text:async()=>JSON.stringify([body])};
+  }
+  return nativeFetch(url,opt);
+};
+function persistDirect(){
+  if(!DIRECT_MODE)return;
+  localStorage.setItem(DIRECT_KEY,JSON.stringify({patients,visits,allTreatments,allConsultants,clinic:localStorage.getItem('dentmemo_preview_clinic')||'DentMemo Clinic',primary:document.getElementById('brand-primary')?.value||'#2563ff',secondary:document.getElementById('brand-secondary')?.value||'#0d1b3d',logo:localStorage.getItem('dentmemo_direct_logo')||''}));
+}
+function loadDirect(){
+  if(!DIRECT_MODE)return;
+  try{const d=JSON.parse(localStorage.getItem(DIRECT_KEY)||'{}');patients=Array.isArray(d.patients)?d.patients:[];visits=Array.isArray(d.visits)?d.visits:[];allTreatments=Array.isArray(d.allTreatments)?d.allTreatments:[...DEFAULT_T];allConsultants=Array.isArray(d.allConsultants)?d.allConsultants:[...DEFAULT_C];if(d.clinic)localStorage.setItem('dentmemo_preview_clinic',d.clinic);if(d.logo)localStorage.setItem('dentmemo_direct_logo',d.logo)}catch(e){}
+  rebuildStats();
+}
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwYXRkYXl4Y3lhem96ZHFiYXNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTU0NTksImV4cCI6MjA5OTk3MTQ1OX0.ludAPHZKT_NJXZHp3BmGRtbxWCxhMVXgF_hfVPCt0GU';
 const DEFAULT_T=["10PA", "10PA, Advised RCT", "10PA, Cleaning", "10PA, Cleaning, Composite Filling", "10PA, Cleaning, ZOe", "10PA, Composite Filling", "10PA, Consult", "10PA, ERIO, ZOe", "10PA, Extraction", "10PA, GIC Filling", "10PA, ZOe", "3 Checkup", "ANTIBIOTIC PASTE, BMP, ZOe", "Advised RCT", "Advised RCT, Advised extraction", "Advised extraction", "Advised extraction, Cleaning", "Advised extraction, Consult", "BMP", "BMP Open Drain E", "Bonding Agent, Cleaning", "Bridge Cementation", "CCP", "CHECK UP", "CHECK UP, Ortho appointment", "CHECK UP, RETAINER", "CROWN CUTTING", "Calcium Hychoidl Placed", "Calcium Hychoidl Placed, ERIO", "Calcium Hychoidl Placed, GIC Filling", "Calcium Hychoidl Placed, RCT", "Cleaning", "Cleaning, Composite Filling", "Cleaning, Extraction", "Cleaning, GIC Filling", "Cleaning, Ortho appointment", "Composite", "Composite Filling", "Composite Filling, GIC Filling", "Composite Refilling", "Consult", "Consult + IOPA", "Consult Pedo", "Consult, Ortho appointment", "Consult, Plpectomy", "Crown + Composite + Consult", "Crown Cementation", "Crown Cementation, PFM", "Crown Recementation", "Crown Recementation, GIC Filling", "DC Done", "DENTURE", "DENTURE, IMPRESION", "DENTURE, Try In", "Debonding Done", "Debridement", "Denture Consult", "Diastema Closure", "Dycal + GIC Filling", "Dycal + GIC Filling, GIC Filling", "Dycal+ZOe", "Dycal+ZOe, GIC Filling", "ERCO", "ERCO, ZOe", "ERIO", "ERIO, ZOe", "Extraction", "Extraction 8", "Flexible Denture", "Frenectomy", "GIC Filling", "GIC Filling Done", "GIC Filling, Permanent", "GIC Filling, RCT Obturation Done", "GIC Filling, Refilling", "GIC Filling, ZOe", "Grinding", "IMPLANT CONSULT", "IMPRESION", "IMPRESION, RETAINER", "IPC", "Impression", "Irrigation", "Ketac Molar Filling", "Nightguard Delivered", "Nightguard Impression", "Opaidectomy Done", "Ortho", "Ortho Consult", "Ortho appointment", "Ortho appointment, RETAINER", "PFEM Bridge", "PFM Crown", "Pedo", "Pedo Space Maintainer + Pulpectomy E", "Perm Filling", "Plpectomy", "Plpectomy, Refilling", "Pulpectomy", "Pulpectomy ET", "Pulpotomy", "RCT", "RCT Ca(OH) Placed", "RCT Obturation Done", "RCT, RCT Obturation Done", "RCT, ZOe", "RETAINER", "Refilling Done", "S.S CROWN", "Scaling + Composite", "Scaling + GIC", "Scaling Done", "Surgeon Consult", "Suture Removal", "Temp Ae Filling", "Temp Refilling", "Try In", "ZOE", "ZOE Temp Done E", "ZOe", "metal Crown"];
 const DEFAULT_C=["Consultant"];
@@ -1172,11 +1191,17 @@ function startTokenRefreshTimer(){
 }
 
 async function init(){
+  loadDirect();
   document.getElementById('loading-screen').style.display='none';
   document.getElementById('login-screen').classList.remove('show');
   rebuildDropdowns();
   filterDir();
   applyRec();
+  document.getElementById('av-date').value=new Date().toISOString().split('T')[0];
+  const directClinic=localStorage.getItem('dentmemo_preview_clinic');
+  if(directClinic)document.querySelector('.nav-brand .main').textContent=directClinic;
+  const directLogo=localStorage.getItem('dentmemo_direct_logo');
+  if(directLogo)document.querySelectorAll('.nav-logo img').forEach(el=>{el.src=directLogo;el.style.display=''});
   return;
   if(await handleOAuthRedirect()&&!AUTH)return;
   if(!AUTH||!AUTH.access_token){showLogin();return}
@@ -1334,7 +1359,7 @@ async function saveNewPatient(){
   const np={pid,name,gender:document.getElementById('np-gender').value,age:document.getElementById('np-age').value.trim(),phone:document.getElementById('np-phone').value.trim(),clinic_id:AUTH&&AUTH.clinic_id};
   const r=await fetch(SB_URL+'/rest/v1/patients',{method:'POST',headers:SBH(),body:JSON.stringify(np)});
   if(!r.ok){showToast('Failed to save','error');return}
-  patients.push({...np,visits:0,total:0});
+  patients.push({...np,visits:0,total:0});persistDirect();
   avPick(name);document.getElementById('np-card').style.display='none';showToast('✓ '+name+' added');filterDir();
 }
 async function submitVisit(){
@@ -1347,7 +1372,7 @@ async function submitVisit(){
   const r=await fetch(SB_URL+'/rest/v1/visits',{method:'POST',headers:SBH(),body:JSON.stringify(v)});
   const saved=await r.json();
   if(!r.ok){showToast('Save failed','error');btn.textContent='✓ Save Visit';btn.disabled=false;return}
-  visits.unshift(Array.isArray(saved)?saved[0]:saved);
+  visits.unshift(Array.isArray(saved)?saved[0]:saved);persistDirect();
   rebuildStats();btn.textContent='✓ Save Visit';btn.disabled=false;
   showToast('✓ Visit saved for '+name);clearForm();
   setTimeout(()=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-search').classList.add('active');document.querySelectorAll('.nav-tab')[0].classList.add('active');document.getElementById('search-input').value=name;const p=patients.find(x=>x.name===name);if(p)showPatient(p)},500);
@@ -1374,14 +1399,14 @@ async function saveEditVisit(){
   const id=document.getElementById('edit-visit-id').value;if(!id)return;
   const upd={visit_date:document.getElementById('edit-date').value,age:document.getElementById('edit-age').value,diagnosis:document.getElementById('edit-diagnosis').value.trim(),treatment:document.getElementById('edit-treatment').value,consultant:document.getElementById('edit-consultant').value,cons_fee:parseFloat(document.getElementById('edit-cons-fee').value)||0,clinic_share:parseFloat(document.getElementById('edit-clinic-share').value)||0,lab_cost:parseFloat(document.getElementById('edit-lab-cost').value)||0,remarks:document.getElementById('edit-remarks').value.trim()};
   const r=await fetch(SB_URL+'/rest/v1/visits?id=eq.'+id,{method:'PATCH',headers:SBH(),body:JSON.stringify(upd)});
-  if(r.ok){const i=visits.findIndex(x=>x.id==id);if(i>-1)visits[i]={...visits[i],...upd};rebuildStats();showToast('✓ Visit updated');closeEditModal();if(activeP)showPatient(activeP)}
+  if(r.ok){const i=visits.findIndex(x=>x.id==id);if(i>-1)visits[i]={...visits[i],...upd};rebuildStats();persistDirect();showToast('✓ Visit updated');closeEditModal();if(activeP)showPatient(activeP)}
   else showToast('Update failed','error');
 }
 async function deleteVisit(){
   const id=document.getElementById('edit-visit-id').value;if(!id)return;
   if(!confirm('Delete this visit? Cannot be undone.'))return;
   const r=await fetch(SB_URL+'/rest/v1/visits?id=eq.'+id,{method:'DELETE',headers:SBH()});
-  if(r.ok){visits=visits.filter(x=>x.id!=id);rebuildStats();showToast('Visit deleted');closeEditModal();if(activeP)showPatient(activeP)}
+  if(r.ok){visits=visits.filter(x=>x.id!=id);rebuildStats();persistDirect();showToast('Visit deleted');closeEditModal();if(activeP)showPatient(activeP)}
   else showToast('Delete failed','error');
 }
 document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal'))closeEditModal()});
@@ -1437,7 +1462,7 @@ function renderDir(){
   pag.onclick=function(e){var b=e.target.closest('[data-p]');if(b&&!b.disabled){dirPage=parseInt(b.dataset.p);renderDir();window.scrollTo(0,0)}};
 }
 function updP(idx,field,val){
-  if(!patients[idx])return;patients[idx][field]=val.trim();const pid=patients[idx].pid;
+  if(!patients[idx])return;patients[idx][field]=val.trim();persistDirect();const pid=patients[idx].pid;
   clearTimeout(updTimer[pid]);
   updTimer[pid]=setTimeout(async()=>{
     await fetch(SB_URL+'/rest/v1/patients?pid=eq.'+pid,{method:'PATCH',headers:SBH(),body:JSON.stringify({[field]:val.trim()})});
@@ -1475,13 +1500,13 @@ async function executeMerge(){
   await fetch(SB_URL+'/rest/v1/visits?patient_name=ilike.'+encodeURIComponent(rem.name),{method:'PATCH',headers:SBH(),body:JSON.stringify({patient_name:keep.name})});
   await fetch(SB_URL+'/rest/v1/patients?pid=eq.'+rem.pid,{method:'DELETE',headers:SBH()});
   visits.forEach(v=>{if((v.patient_name||'').toLowerCase()===rem.name.toLowerCase())v.patient_name=keep.name});
-  patients.splice(patients.indexOf(rem),1);rebuildStats();mergeSelected=[];updateMergeBar();
+  patients.splice(patients.indexOf(rem),1);rebuildStats();persistDirect();mergeSelected=[];updateMergeBar();
   showToast('✓ Merged');filterDir();
 }
 async function delPatient(pid,name){
   if(!confirm('Delete "'+name+'"? Cannot be undone.'))return;
   const r=await fetch(SB_URL+'/rest/v1/patients?pid=eq.'+pid,{method:'DELETE',headers:SBH()});
-  if(r.ok){patients=patients.filter(p=>p.pid!==pid);showToast('✓ Deleted');filterDir()}
+  if(r.ok){patients=patients.filter(p=>p.pid!==pid);persistDirect();showToast('✓ Deleted');filterDir()}
   else showToast('Delete failed','error');
 }
 function viewDir(name){
@@ -1502,7 +1527,7 @@ async function addPatientModal(){
   const np={pid,name,gender:document.getElementById('m-gender').value,age:document.getElementById('m-age').value.trim(),phone:document.getElementById('m-phone').value.trim(),clinic_id:AUTH&&AUTH.clinic_id};
   const r=await fetch(SB_URL+'/rest/v1/patients',{method:'POST',headers:SBH(),body:JSON.stringify(np)});
   if(!r.ok){showToast('Failed to save','error');return}
-  patients.push({...np,visits:0,total:0});
+  patients.push({...np,visits:0,total:0});persistDirect();
   closeModal('add-modal');showToast('✓ '+name+' added');filterDir();
 }
 document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===document.getElementById('add-modal'))closeModal('add-modal')});
@@ -1623,9 +1648,14 @@ function renderOverview(){
 
 // ── SETTINGS ──
 async function saveSettings(){
+  if(DIRECT_MODE){persistDirect();return}
   await fetch(SB_URL+'/rest/v1/patients?pid=eq.SETTINGS',{method:'PATCH',headers:SBH(),body:JSON.stringify({age:JSON.stringify(allTreatments),phone:JSON.stringify(allConsultants)})});
 }
 function renderSettings(){
+  if(DIRECT_MODE){
+    document.getElementById('brand-name').value=localStorage.getItem('dentmemo_preview_clinic')||'DentMemo Clinic';
+    const dl=localStorage.getItem('dentmemo_direct_logo');if(dl){document.getElementById('brand-logo-preview').src=dl;document.getElementById('brand-logo-preview').style.display=''}
+  }
   document.getElementById('treatment-tags').innerHTML=allTreatments.map((t,i)=>`<span class="tag">${t}<span class="tag-del" onclick="delT(${i})">×</span></span>`).join('');
   document.getElementById('consultant-tags').innerHTML=allConsultants.map((c,i)=>`<span class="tag">${c}<span class="tag-del" onclick="delC(${i})">×</span></span>`).join('');
   if(AUTH&&AUTH.clinic){
@@ -1678,6 +1708,10 @@ async function regenerateStaffPin(){
 }
 function openClinicSettings(){if(!isDoctor){logoTap();return}const tab=[...document.querySelectorAll('.nav-tab')].find(x=>x.textContent.includes('Settings'));showPage('settings',tab);setTimeout(()=>document.getElementById('brand-name')?.focus(),80)}
 async function saveBranding(){
+  if(DIRECT_MODE){
+    const name=document.getElementById('brand-name').value.trim()||'DentMemo Clinic',primary=document.getElementById('brand-primary').value,secondary=document.getElementById('brand-secondary').value;
+    localStorage.setItem('dentmemo_preview_clinic',name);document.querySelector('.nav-brand .main').textContent=name;document.documentElement.style.setProperty('--teal',primary);document.documentElement.style.setProperty('--teal-d',secondary);persistDirect();showToast('✓ Clinic identity updated');return;
+  }
   if(!AUTH||!AUTH.clinic_id)return;
   const name=document.getElementById('brand-name').value.trim();
   const primary_color=document.getElementById('brand-primary').value;
@@ -1694,6 +1728,7 @@ function uploadBrandLogo(input){
   const reader=new FileReader();
   reader.onload=async()=>{
     const dataUrl=reader.result;
+    if(DIRECT_MODE){localStorage.setItem('dentmemo_direct_logo',dataUrl);document.getElementById('brand-logo-preview').src=dataUrl;document.getElementById('brand-logo-preview').style.display='';document.querySelectorAll('.nav-logo img').forEach(el=>{el.src=dataUrl;el.style.display=''});persistDirect();showToast('✓ Logo updated');return}
     document.getElementById('brand-logo-preview').src=dataUrl;document.getElementById('brand-logo-preview').style.display='';
     const r=await fetch(SB_URL+'/rest/v1/clinics?id=eq.'+AUTH.clinic_id,{method:'PATCH',headers:SBH(),body:JSON.stringify({logo_url:dataUrl})});
     if(r.ok){AUTH.clinic={...(AUTH.clinic||{}),logo_url:dataUrl};saveSession();applyBranding();showToast('✓ Logo updated')}
@@ -1701,10 +1736,10 @@ function uploadBrandLogo(input){
   };
   reader.readAsDataURL(file);
 }
-function addTreatment(){const v=document.getElementById('new-treatment').value.trim();if(!v)return;if(allTreatments.includes(v)){showToast('Already exists','error');return}allTreatments.push(v);allTreatments.sort();document.getElementById('new-treatment').value='';rebuildDropdowns();renderSettings();saveSettings();showToast('✓ Added')}
-function delT(i){allTreatments.splice(i,1);rebuildDropdowns();renderSettings();saveSettings();showToast('Removed')}
+function addTreatment(){const v=document.getElementById('new-treatment').value.trim();if(!v)return;if(allTreatments.includes(v)){showToast('Already exists','error');return}allTreatments.push(v);allTreatments.sort();document.getElementById('new-treatment').value='';rebuildDropdowns();renderSettings();saveSettings();persistDirect();showToast('✓ Added')}
+function delT(i){allTreatments.splice(i,1);rebuildDropdowns();renderSettings();saveSettings();persistDirect();showToast('Removed')}
 function addConsultant(){const v=document.getElementById('new-consultant').value.trim();if(!v)return;if(allConsultants.includes(v)){showToast('Already exists','error');return}allConsultants.push(v);document.getElementById('new-consultant').value='';rebuildDropdowns();renderSettings();saveSettings();showToast('✓ Added')}
-function delC(i){allConsultants.splice(i,1);rebuildDropdowns();renderSettings();saveSettings();showToast('Removed')}
+function delC(i){allConsultants.splice(i,1);rebuildDropdowns();renderSettings();saveSettings();persistDirect();showToast('Removed')}
 
 init();
 </script>
