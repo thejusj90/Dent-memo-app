@@ -1559,14 +1559,14 @@ function renderRec(){
 
 // ── DOWNLOAD ──
 function getDD(s){return s==='all'?visits:recF}
-function downloadCSV(s){
+function downloadCSV(s){if(!isDoctor){showToast('Doctor access required','error');return}
   const d=getDD(s),esc=v=>`"${String(v||'').replace(/"/g,'""')}"`;
   const rows=d.map(v=>[esc(v.visit_date),esc(v.patient_name),esc(v.age),esc(v.gender),esc(v.phone),esc(v.diagnosis),esc(v.treatment),esc(v.consultant),v.cons_fee||0,v.clinic_share||0,v.lab_cost||0,esc(v.remarks)].join(','));
   const blob=new Blob([['Date,Patient,Age,Gender,Phone,Diagnosis,Treatment,Consultant,Consultant Fee,Clinic,Lab,Remarks',...rows].join('\n')],{type:'text/csv;charset=utf-8;'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='drblessins_'+s+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
   showToast('✓ CSV downloaded ('+d.length+' rows)');
 }
-function downloadExcel(s){
+function downloadExcel(s){if(!isDoctor){showToast('Doctor access required','error');return}
   const d=getDD(s);
   let t='<table><tr><th>Date</th><th>Patient</th><th>Age</th><th>Gender</th><th>Phone</th><th>Diagnosis</th><th>Treatment</th><th>Consultant</th><th>Consultant Fee</th><th>Clinic</th><th>Lab</th><th>Remarks</th></tr>';
   d.forEach(v=>{t+='<tr>'+[v.visit_date,v.patient_name,v.age,v.gender,v.phone,v.diagnosis,v.treatment,v.consultant,v.cons_fee||0,v.clinic_share||0,v.lab_cost||0,v.remarks||''].map(c=>`<td>${c||''}</td>`).join('')+'</tr>'});
