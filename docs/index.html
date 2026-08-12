@@ -26,7 +26,7 @@ nav{background:linear-gradient(135deg,var(--teal),var(--teal-d));color:#fff;padd
 .nav-logo img{height:32px;width:32px;object-fit:contain;border-radius:6px;background:#fff;padding:2px;flex:none}
 .nav-brand{min-width:0;overflow:hidden}
 .nav-brand .main{font-size:13px;font-weight:800;color:#fff;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
-.nav-brand .sub{font-size:10px;font-weight:600;color:rgba(255,255,255,.75);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.nav-brand .sub{font-size:10px;font-weight:600;color:rgba(255,255,255,.75);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}.brand-edit{width:26px;height:26px;border:1px solid rgba(255,255,255,.25);border-radius:8px;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;font-size:14px;align-items:center;justify-content:center}.brand-edit:hover{background:rgba(255,255,255,.24)}
 .nav-tab{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:600;color:rgba(255,255,255,.7);border:none;background:none;white-space:nowrap}
 .nav-tab.active{color:#fff;background:rgba(255,255,255,.22)}
 .mode-badge{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:700}
@@ -390,7 +390,7 @@ nav::-webkit-scrollbar{display:none}
 <nav>
   <div class="nav-logo" id="nav-logo" onclick="logoTap()">
     <img src="" alt="logo" style="display:none"/>
-    <div class="nav-brand"><span class="main">DentMemo</span><span class="sub">Loading…</span></div>
+    <div class="nav-brand"><span class="main">DentMemo</span><span class="sub">Clinic workspace</span></div><button class="brand-edit doctor-only" style="display:none" title="Edit clinic name and logo" aria-label="Edit clinic identity" onclick="event.stopPropagation();openClinicSettings()">✎</button>
   </div>
   <div id="nav-tabs" style="display:flex;gap:2px">
     <button class="nav-tab active" onclick="showPage('search',this)">Search</button>
@@ -590,7 +590,7 @@ nav::-webkit-scrollbar{display:none}
     <div class="card-header"><div class="card-title">⚙ Settings</div></div>
     <div class="card-body">
       <div class="settings-section">
-        <h3>Clinic Branding</h3>
+        <h3>Clinic identity</h3><p style="font-size:12px;color:var(--muted);margin:-2px 0 14px">Change the clinic name, logo and colours shown beside the logo for everyone in your clinic.</p>
         <div class="add-tag-row" style="margin-bottom:12px">
           <label style="font-size:12px;color:var(--muted);width:110px">Clinic name</label>
           <input type="text" id="brand-name" placeholder="Clinic name" style="flex:1"/>
@@ -825,7 +825,7 @@ const DEFAULT_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKUAAADACAYAAA
 function applyBranding(){
   if(!AUTH||!AUTH.clinic)return;
   const c=AUTH.clinic;
-  if(c.name){document.title=c.name+' · DentMemo';const nb=document.querySelector('.nav-brand .main');if(nb)nb.textContent=c.name;const sb=document.querySelector('.nav-brand .sub');if(sb)sb.textContent=(AUTH.display_name?('Hi, '+AUTH.display_name):'DentMemo');}
+  if(c.name){document.title=c.name+' · DentMemo';const nb=document.querySelector('.nav-brand .main');if(nb)nb.textContent=c.name;const sb=document.querySelector('.nav-brand .sub');if(sb)sb.textContent='DentMemo clinic workspace';}
   if(c.primary_color){document.documentElement.style.setProperty('--teal',c.primary_color);}
   if(c.secondary_color){document.documentElement.style.setProperty('--teal-d',c.secondary_color);}
   const logoSrc=c.logo_url||DEFAULT_LOGO;
@@ -1624,6 +1624,7 @@ async function regenerateStaffPin(){
     document.getElementById('staff-pin-error').textContent='Connection error — try again';
   }
 }
+function openClinicSettings(){if(!isDoctor){logoTap();return}const tab=[...document.querySelectorAll('.nav-tab')].find(x=>x.textContent.includes('Settings'));showPage('settings',tab);setTimeout(()=>document.getElementById('brand-name')?.focus(),80)}
 async function saveBranding(){
   if(!AUTH||!AUTH.clinic_id)return;
   const name=document.getElementById('brand-name').value.trim();
