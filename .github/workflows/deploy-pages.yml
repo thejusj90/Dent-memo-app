@@ -1,4 +1,5 @@
 name: Deploy DentMemo to GitHub Pages
+# Publishes the approved static app from /docs
 
 on:
   push:
