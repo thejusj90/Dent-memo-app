@@ -227,6 +227,59 @@ nav::-webkit-scrollbar{display:none}
 @media(max-width:900px){.ov-kpis{grid-template-columns:repeat(2,1fr)}.ov-filter-grid{grid-template-columns:1fr 1fr}.ov-range-field{grid-column:1/-1}.ov-chart-head{align-items:flex-start;flex-direction:column}.ov-metrics{min-width:0;width:100%;overflow-x:auto}.ov-lower{grid-template-columns:1fr}}
 @media(max-width:600px){#page-overview{padding-bottom:72px}.ov-kpis{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px}.ov-kpi{min-width:165px;scroll-snap-align:start}.ov-filter-grid{grid-template-columns:1fr}.ov-range-field{grid-column:auto}.ov-ranges{overflow-x:auto}.ov-ranges button{min-width:82px}.ov-filter-card{padding:13px}.ov-chart-head{padding:14px}.ov-metrics button{min-width:100px}.ov-chart{height:230px;padding-left:10px;padding-right:10px;gap:7px}.ov-bar{min-width:40px}.ov-totals{grid-template-columns:1fr 1fr;gap:10px}.ov-total{border:0;padding:5px}.ov-rank{grid-template-columns:22px minmax(90px,1fr) 1fr auto}.ov-lower{gap:10px}}
 
+
+/* Mobile-first navigation and Overview hardening */
+@media(max-width:600px){
+  body{padding-bottom:72px;overflow-x:hidden}
+  nav{height:60px;overflow:visible;padding:0 12px;position:sticky}
+  .nav-logo{max-width:calc(100% - 86px);margin-right:auto}
+  .nav-brand .main{font-size:12px;max-width:180px}
+  .nav-brand .sub{font-size:8px;max-width:180px}
+  .mode-badge{flex:none}
+  #nav-tabs{position:fixed!important;left:0;right:0;bottom:0;height:64px;z-index:500;background:rgba(255,255,255,.98);border-top:1px solid var(--border);box-shadow:0 -5px 20px rgba(13,27,61,.08);display:flex!important;gap:0!important;overflow-x:auto;padding:max(4px,env(safe-area-inset-bottom)) 5px 4px;scrollbar-width:none}
+  #nav-tabs::-webkit-scrollbar{display:none}
+  #nav-tabs .nav-tab{color:var(--muted);background:transparent;border-radius:9px;min-width:67px;flex:1;padding:7px 6px;font-size:9px;display:flex;align-items:center;justify-content:center}
+  #nav-tabs .nav-tab.active{color:var(--teal);background:var(--teal-l)}
+  #nav-tabs .nav-tab.logout{color:var(--red)}
+  .brand-edit{display:none!important}
+  .page{padding:10px 10px 18px;max-width:100%;overflow-x:hidden}
+  #page-overview{padding:10px 10px 22px}
+  .ov-kpis{display:grid;grid-template-columns:1fr 1fr;gap:9px;overflow:visible;padding:0;margin-bottom:10px}
+  .ov-kpi{min-width:0;padding:12px 11px;border-radius:13px;gap:8px;scroll-snap-align:none}
+  .ov-kpi:first-child{grid-column:1/-1}
+  .ov-kpi-icon{width:34px;height:34px;font-size:15px}
+  .ov-kpi strong{font-size:18px}.ov-kpi small{font-size:10px}
+  .ov-filter-card{padding:12px;border-radius:13px;margin-bottom:10px}
+  .ov-filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .ov-range-field{grid-column:1/-1}
+  .ov-ranges{display:grid;grid-template-columns:repeat(3,1fr);border:0;gap:5px;background:transparent;overflow:visible}
+  .ov-ranges button{min-width:0;border:1px solid var(--border)!important;border-radius:8px;padding:9px 4px;font-size:10px}
+  .ov-ranges button.active{border-color:var(--teal)!important}
+  .ov-field select{height:42px;font-size:12px}
+  .ov-clear{grid-column:1/-1;height:34px;text-align:left;padding:0}
+  .ov-chart-card{border-radius:13px;margin-bottom:10px}
+  .ov-chart-head{padding:13px 12px 9px;gap:10px}
+  .ov-chart-head h2{font-size:15px}
+  .ov-metrics{display:grid;grid-template-columns:1fr 1fr;width:100%;min-width:0;border:0;gap:5px;background:transparent;overflow:visible}
+  .ov-metrics button{min-width:0;border:1px solid var(--border)!important;border-radius:8px;padding:9px 5px;font-size:9px}
+  .ov-chart{height:220px;padding:18px 8px 0;gap:5px;overflow-x:auto;scroll-snap-type:x proximity}
+  .ov-bar{min-width:42px;scroll-snap-align:start}.ov-bar-fill{width:28px}.ov-bar-value{font-size:8px}.ov-bar-label{font-size:8px}
+  .ov-totals{grid-template-columns:1fr 1fr;padding:10px;gap:6px}
+  .ov-total{background:#f8fafc;border:0;border-radius:9px;padding:8px!important}
+  .ov-total strong{font-size:13px}.ov-total small{font-size:9px}
+  .ov-lower{grid-template-columns:1fr;gap:10px}
+  .ov-rank-card{padding:13px 12px;border-radius:13px}
+  .ov-rank{grid-template-columns:22px minmax(90px,1fr) minmax(55px,.8fr) auto;gap:7px;font-size:10px}
+  .ov-rank strong{font-size:9px;white-space:nowrap}
+  .pin-note{margin-bottom:8px}
+  .record-exports{padding-bottom:4px}
+}
+@media(max-width:370px){
+  .ov-filter-grid{grid-template-columns:1fr}.ov-range-field,.ov-clear{grid-column:1}
+  .ov-kpi{padding:10px 8px}.ov-kpi strong{font-size:16px}
+  #nav-tabs .nav-tab{min-width:62px}
+}
+
 </style>
 </head>
 <body>
@@ -235,7 +288,7 @@ nav::-webkit-scrollbar{display:none}
   <div class="notion-card">
    <div class="onb-page active"><span class="emoji">🦷</span><h1>Let’s build your clinic memory.</h1><p>A focused workspace for patient history, daily visits and consultant settlements.</p></div>
    <div class="onb-page"><span class="emoji">🏥</span><h1>Tell us about your clinic.</h1><p>This becomes the name of your private workspace.</p><div class="notion-form"><label>Clinic name<input id="onb-clinic" value="Blessin Dental Studio"></label><label>Primary dentist<input value="Dr. Blessin"></label><label>City<input value="Margao, Goa"></label></div></div>
-   <div class="onb-page"><span class="emoji">✨</span><h1>Your everyday workflow.</h1><p>We’ve kept only the things a clinic uses repeatedly.</p><div class="notion-choices"><span>✓ Patient search</span><span>✓ Add visit</span><span>✓ Patient directory</span><span>✓ Treatment records</span><span>✓ Consultant fees</span><span>✓ Data export</span></div></div>
+   <div class="onb-page"><span class="emoji">✨</span><h1>Your everyday workflow.</h1><p>We’ve kept only the things a clinic uses repeatedly.</p><div class="notion-choices"><span>✓ Patient search</span><span>✓ Add visit</span><span>✓ Patient directory</span><span>✓ Treatment records</span><span>✓ Consultant fees</span></div></div>
    <div class="onb-page"><span class="emoji">🔐</span><h1>Protect dentist access.</h1><p>Assistants can work normally. Tap the clinic logo three times and enter this PIN to open consultant and financial details.</p><div class="notion-form"><label>4-digit clinic PIN<input id="onb-pin" inputmode="numeric" maxlength="4" placeholder="••••"></label></div></div>
    <div class="notion-actions"><button class="back" id="onb-back" onclick="onbBack()" style="display:none">Back</button><button class="next" id="onb-next" onclick="onbNext()">Continue</button></div>
   </div>
@@ -527,7 +580,7 @@ nav::-webkit-scrollbar{display:none}
         <button class="btn btn-secondary btn-sm" onclick="clearRec()" style="align-self:flex-end">✕</button>
       </div>
       <div class="sum-bar doctor-only" id="rec-sum" style="display:none"></div>
-      <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+      <div class="record-exports doctor-only" style="display:none;gap:5px;margin-top:8px;flex-wrap:wrap">
         <button class="btn btn-secondary btn-sm" onclick="downloadCSV('filtered')">⬇ CSV (Filtered)</button>
         <button class="btn btn-secondary btn-sm" onclick="downloadCSV('all')">⬇ CSV (All)</button>
         <button class="btn btn-secondary btn-sm" onclick="downloadExcel('filtered')">⬇ Excel (Filtered)</button>
