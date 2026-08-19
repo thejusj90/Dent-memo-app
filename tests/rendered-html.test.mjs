@@ -21,10 +21,13 @@ test("Consent route is wired to the standalone product app", async () => {
   assert.match(route, /return\s*<ConsentApp\s*\/>/);
 });
 
-test("Consent product source contains its core standalone experience", async () => {
+test("Consent product source contains v2 standalone experience", async () => {
   const app = await readFile(new URL("../components/consent/ConsentApp.tsx", import.meta.url), "utf8");
-  assert.match(app, /Dental consent\. Signed in under a minute\./i);
-  assert.match(app, /Consent records/i);
+  assert.match(app, /Create\. Sign\. Email\. Retrieve\./i);
+  assert.match(app, /Consent archive/i);
   assert.match(app, /Accept & Submit/i);
-  assert.match(app, /Approve for Clinic Use/i);
+  assert.match(app, /Activity log/i);
+  assert.match(app, /Clinic identity & users/i);
+  assert.match(app, /\+ New template/i);
+  assert.match(app, /Create new version/i);
 });
