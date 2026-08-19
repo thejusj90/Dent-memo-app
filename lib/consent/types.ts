@@ -15,6 +15,7 @@ export type DoctorSetting = {
 export type ConsentTemplate = {
   id: string;
   clinic_id: string | null;
+  source_template_id?: string | null;
   procedure_key: string;
   display_title: string;
   consent_text: string;
@@ -28,14 +29,30 @@ export type ConsentRecord = {
   id: string;
   clinic_id: string;
   consent_number: string;
+  template_version?: number;
   patient_name_snapshot: string;
   patient_mobile_snapshot: string | null;
+  patient_dob_snapshot?: string | null;
   doctor_name_snapshot: string;
+  doctor_registration_snapshot?: string | null;
+  doctor_email_snapshot?: string | null;
+  procedure_key?: string;
   procedure_name_snapshot: string;
   tooth_numbers: string | null;
+  procedure_notes?: string | null;
+  consent_title_snapshot?: string;
+  consent_text_snapshot?: string;
+  locale?: string;
+  acknowledgements?: string[];
+  signer_type?: "patient" | "guardian";
+  signer_name?: string;
+  signer_relationship?: string | null;
   status: ConsentStatus;
   signed_at: string | null;
+  voided_at?: string | null;
+  void_reason?: string | null;
   email_status: "pending" | "sent" | "failed";
+  email_sent_at?: string | null;
   pdf_storage_path: string | null;
   created_at: string;
 };
