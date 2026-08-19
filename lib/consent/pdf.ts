@@ -1,11 +1,21 @@
 import type { SignatureStroke, SignedConsentInput } from "./types";
 
+function pdfSafe(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x20-\x7E]/g, "?");
+}
+
 function esc(value: string) {
-  return value.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+  return pdfSafe(value)
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)");
 }
 
 function wrap(text: string, width = 82) {
-  const words = text.replace(/\s+/g, " ").trim().split(" ");
+  const words = pdfSafe(text).replace(/\s+/g, " ").trim().split(" ");
   const lines: string[] = [];
   let line = "";
   for (const word of words) {
