@@ -65,3 +65,25 @@ test("Consent email supports real resends and attributed audit rows", async () =
   assert.match(email, /entity_type: "consent"/);
   assert.doesNotMatch(email, /Idempotency-Key.*dentmemo-consent-\$\{consent\.id\}`/);
 });
+
+test("Consent audit RPC is not callable by anonymous users", async () => {
+  const hardening = await read("supabase/migrations/202608190005_consent_audit_rpc_privileges.sql");
+  assert.match(hardening, /revoke execute[\s\S]*from anon/i);
+  assert.match(hardening, /grant execute[\s\S]*to authenticated/i);
+});
+
+test("Consent foreign keys have supporting indexes and duplicate clinic policy is removed", async () => {
+  const sql = await read("supabase/migrations/202608190006_consent_performance_indexes.sql");
+  assert.match(sql, /drop policy if exists dm_clinics_consent_update/i);
+  for (const index of [
+    "dm_consent_audit_actor_idx",
+    "dm_consent_templates_created_by_idx",
+    "dm_consent_templates_source_idx",
+    "dm_consents_created_by_idx",
+    "dm_consents_doctor_setting_idx",
+    "dm_consents_patient_fk_idx",
+    "dm_consents_template_fk_idx",
+  ]) {
+    assert.match(sql, new RegExp(index));
+  }
+});
