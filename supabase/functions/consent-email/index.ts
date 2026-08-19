@@ -66,30 +66,44 @@ Deno.serve(async (req) => {
     return json({ error: "Doctor email or PDF is missing" }, 409);
   }
 
+  const [{ data: membership }, { data: clinic }] = await Promise.all([
+    userClient
+      .from("dm_clinic_members")
+      .select("display_name")
+      .eq("clinic_id", consent.clinic_id)
+      .eq("user_id", userData.user.id)
+      .eq("active", true)
+      .maybeSingle(),
+    userClient.from("dm_clinics").select("name").eq("id", consent.clinic_id).maybeSingle(),
+  ]);
+  const actorDisplayName = membership?.display_name || null;
+  const clinicName = clinic?.name || "Dental clinic";
+
   const { data: file, error: downloadError } = await admin.storage
     .from("dm-consent-documents")
     .download(consent.pdf_storage_path);
   if (downloadError || !file) return json({ error: "Signed PDF could not be loaded" }, 500);
 
   const pdfBytes = new Uint8Array(await file.arrayBuffer());
+  const attemptId = crypto.randomUUID();
   const resendResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendKey}`,
       "Content-Type": "application/json",
-      "Idempotency-Key": `dentmemo-consent-${consent.id}`,
+      "Idempotency-Key": `dentmemo-consent-${consent.id}-${attemptId}`,
     },
     body: JSON.stringify({
       from: fromEmail,
       to: [consent.doctor_email_snapshot],
       subject: `Signed dental consent • ${consent.consent_number}`,
       text: [
-        "A dental consent form has been completed.",
+        `A dental consent form from ${clinicName} has been completed.`,
         "",
         `Consent ID: ${consent.consent_number}`,
         `Procedure: ${consent.procedure_name_snapshot}`,
         "",
-        "The signed consent PDF is attached.",
+        "The signed consent PDF is attached. A secure backup remains in DentMemo Consent for retrieval if this email is deleted.",
         "",
         "DentMemo Consent",
       ].join("\n"),
@@ -108,7 +122,10 @@ Deno.serve(async (req) => {
       consent_id: consent.id,
       event_type: "email_failed",
       actor_user_id: userData.user.id,
-      metadata: { provider: "resend", status: resendResponse.status, detail },
+      actor_display_name: actorDisplayName,
+      entity_type: "consent",
+      entity_id: consent.id,
+      metadata: { provider: "resend", status: resendResponse.status, attempt_id: attemptId },
     });
     return json({ error: "Email delivery failed" }, 502);
   }
@@ -123,8 +140,11 @@ Deno.serve(async (req) => {
     consent_id: consent.id,
     event_type: "email_sent",
     actor_user_id: userData.user.id,
-    metadata: { provider: "resend", provider_message_id: provider?.id || null },
+    actor_display_name: actorDisplayName,
+    entity_type: "consent",
+    entity_id: consent.id,
+    metadata: { provider: "resend", provider_message_id: provider?.id || null, attempt_id: attemptId },
   });
 
-  return json({ ok: true, providerMessageId: provider?.id || null });
+  return json({ ok: true, providerMessageId: provider?.id || null, attemptId });
 });
