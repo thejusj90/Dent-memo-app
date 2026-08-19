@@ -1,4 +1,5 @@
 export type ConsentStatus = "draft" | "ready_for_signature" | "signed" | "voided";
+export type ClinicRole = "owner" | "dentist" | "consultant" | "assistant";
 
 export type SignaturePoint = { x: number; y: number };
 export type SignatureStroke = { points: SignaturePoint[] };
@@ -23,6 +24,8 @@ export type ConsentTemplate = {
   version: number;
   approval_status: "needs_review" | "approved";
   active: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type ConsentRecord = {
@@ -57,16 +60,43 @@ export type ConsentRecord = {
   created_at: string;
 };
 
+export type AuditEvent = {
+  id: string;
+  clinic_id: string;
+  consent_id: string | null;
+  event_type: string;
+  actor_user_id: string | null;
+  actor_display_name: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export type ClinicMember = {
+  user_id: string;
+  role: ClinicRole;
+  display_name: string;
+  active: boolean;
+};
+
 export type ClinicContext = {
   clinicId: string;
   clinicName: string;
   city: string | null;
-  role: "owner" | "dentist" | "consultant" | "assistant";
+  address: string | null;
+  phone: string | null;
+  clinicEmail: string | null;
+  logoPath: string | null;
+  logoUrl: string | null;
+  role: ClinicRole;
   displayName: string;
-  entitlement: "trial" | "active" | "past_due" | "cancelled" | "expired" | "none";
+  entitlement: "active";
   doctors: DoctorSetting[];
   templates: ConsentTemplate[];
   records: ConsentRecord[];
+  audit: AuditEvent[];
+  members: ClinicMember[];
 };
 
 export type SignedConsentInput = {
