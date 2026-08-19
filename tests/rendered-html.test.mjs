@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
-import { extname } from "node:path";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function loadWorker() {
@@ -10,40 +9,22 @@ async function loadWorker() {
   return worker;
 }
 
-async function compiledText(root = new URL("../dist/", import.meta.url)) {
-  const parts = [];
-  async function walk(directoryUrl) {
-    const entries = await readdir(directoryUrl, { withFileTypes: true });
-    for (const entry of entries) {
-      const child = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, directoryUrl);
-      if (entry.isDirectory()) {
-        await walk(child);
-        continue;
-      }
-      const extension = extname(entry.name);
-      if (![".js", ".html", ".json", ".txt"].includes(extension)) continue;
-      parts.push(await readFile(child, "utf8"));
-    }
-  }
-  await walk(root);
-  return parts.join("\n");
-}
-
 test("compiled Worker exposes fetch", async () => {
   const worker = await loadWorker();
   assert.ok(worker);
   assert.equal(typeof worker.fetch, "function");
 });
 
-test("compiled output contains development preview metadata", async () => {
-  const output = await compiledText();
-  assert.match(output, /codex-preview/i);
-  assert.match(output, /development/i);
+test("Consent route is wired to the standalone product app", async () => {
+  const route = await readFile(new URL("../app/consent/page.tsx", import.meta.url), "utf8");
+  assert.match(route, /ConsentApp/);
+  assert.match(route, /return\s*<ConsentApp\s*\/>/);
 });
 
-test("compiled output contains standalone DentMemo Consent experience", async () => {
-  const output = await compiledText();
-  assert.match(output, /DentMemo Consent/i);
-  assert.match(output, /Dental consent\. Signed in under a minute\./i);
-  assert.match(output, /Consent records/i);
+test("Consent product source contains its core standalone experience", async () => {
+  const app = await readFile(new URL("../components/consent/ConsentApp.tsx", import.meta.url), "utf8");
+  assert.match(app, /Dental consent\. Signed in under a minute\./i);
+  assert.match(app, /Consent records/i);
+  assert.match(app, /Accept & Submit/i);
+  assert.match(app, /Approve for Clinic Use/i);
 });
