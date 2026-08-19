@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SignatureStroke } from "@/lib/consent/types";
 
 type Props = { value: SignatureStroke[]; onChange: (strokes: SignatureStroke[]) => void };
@@ -12,7 +12,7 @@ export default function SignaturePad({ value, onChange }: Props) {
   const baseRef = useRef<SignatureStroke[]>(value);
   const [hasInk, setHasInk] = useState(value.length > 0);
 
-  function redraw() {
+  const redraw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -34,14 +34,14 @@ export default function SignaturePad({ value, onChange }: Props) {
       stroke.points.slice(1).forEach((point) => ctx.lineTo(point.x * rect.width, point.y * rect.height));
       ctx.stroke();
     }
-  }
+  }, [value]);
 
   useEffect(() => {
     redraw();
     const onResize = () => redraw();
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [value]);
+  }, [redraw]);
 
   function point(event: React.PointerEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
