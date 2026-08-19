@@ -1,0 +1,13 @@
+{
+  "name": "DentMemo Consent",
+  "short_name": "Consent",
+  "description": "Offline-first dental consent records for clinics.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#0f5bea",
+  "icons": [
+    {"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
