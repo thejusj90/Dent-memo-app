@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // This repository currently commits static Next export artifacts for Pages.
+    // They are generated output rather than source and must not be linted.
+    "_next/**",
+    "docs/_next/**",
     // Supabase Edge Functions run on Deno and use npm: imports / Deno globals.
     // They should be linted with Supabase/Deno tooling rather than Next ESLint.
     "supabase/functions/**",
