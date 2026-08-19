@@ -1,0 +1,55 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("Consent migration enables RLS and signed-record immutability", async () => {
+  const sql = await read("supabase/migrations/202608190001_consent_product.sql");
+  for (const table of [
+    "dm_product_entitlements",
+    "dm_consent_doctor_settings",
+    "dm_consent_templates",
+    "dm_consents",
+    "dm_consent_audit_events",
+  ]) {
+    assert.match(sql, new RegExp(`alter table public\\.${table} enable row level security`, "i"));
+  }
+  assert.match(sql, /create function private\.dm_consent_immutable\(\)/i);
+  assert.match(sql, /Signed consent content is immutable/i);
+  assert.match(sql, /create trigger dm_consents_immutable before update/i);
+});
+
+test("Consent free-access migration removes payment gating", async () => {
+  const sql = await read("supabase/migrations/202608190002_consent_free_access.sql");
+  assert.match(sql, /private\.dm_is_member\(clinic_id\)/i);
+  assert.match(sql, /private\.dm_is_member\(\(\(storage\.foldername\(name\)\)\[1\]\)::uuid\)/i);
+  assert.doesNotMatch(sql, /dm_has_product/i);
+  assert.match(sql, /status = 'active'/i);
+});
+
+test("Consent storage remains clinic-scoped and immutable", async () => {
+  const base = await read("supabase/migrations/202608190001_consent_product.sql");
+  const free = await read("supabase/migrations/202608190002_consent_free_access.sql");
+  assert.match(base, /bucket_id = 'dm-consent-documents'/i);
+  assert.match(free, /bucket_id = 'dm-consent-documents'/i);
+  assert.doesNotMatch(`${base}\n${free}`, /create policy dm_consent_documents_(update|delete)/i);
+});
+
+test("Sample consent wording requires clinic review", async () => {
+  const sql = await read("supabase/migrations/202608190001_consent_product.sql");
+  const seededNeedsReview = sql.match(/'needs_review', true\)/g) ?? [];
+  assert.ok(seededNeedsReview.length >= 5, "seed templates should default to needs_review");
+});
+
+test("Consent UI contains no payment or Razorpay path", async () => {
+  const repository = await read("lib/consent/repository.ts");
+  const ui = await read("components/consent/ConsentApp.tsx");
+  for (const source of [repository, ui]) {
+    assert.doesNotMatch(source, /Razorpay/i);
+    assert.doesNotMatch(source, /createBillingSubscription/i);
+    assert.doesNotMatch(source, /Start subscription/i);
+    assert.doesNotMatch(source, /SUPABASE_SERVICE_ROLE_KEY/);
+    assert.doesNotMatch(source, /RESEND_API_KEY/);
+  }
+});
