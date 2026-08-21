@@ -57,13 +57,24 @@ test("Consent UI contains no payment or Razorpay path", async () => {
   }
 });
 
-test("Consent email supports real resends and attributed audit rows", async () => {
+test("Consent email endpoint is a compatibility no-op", async () => {
   const email = await read("supabase/functions/consent-email/index.ts");
-  assert.match(email, /const attemptId = crypto\.randomUUID\(\)/);
-  assert.match(email, /Idempotency-Key.*attemptId/s);
-  assert.match(email, /actor_display_name: actorDisplayName/);
-  assert.match(email, /entity_type: "consent"/);
-  assert.doesNotMatch(email, /Idempotency-Key.*dentmemo-consent-\$\{consent\.id\}`/);
+  assert.match(email, /Email delivery was intentionally removed from DentMemo Consent/i);
+  assert.match(email, /emailFeatureRemoved:\s*true/i);
+  assert.doesNotMatch(email, /api\.resend\.com/i);
+  assert.doesNotMatch(email, /RESEND_API_KEY/i);
+});
+
+test("Consent download uses professional one-page renderer and hides resend controls", async () => {
+  const pdf = await read("docs/consent/professional-pdf.js");
+  const html = await read("docs/consent/index.html");
+  assert.match(html, /professional-pdf\.js/);
+  assert.match(pdf, /PDFDocument/);
+  assert.match(pdf, /consent_letterhead_path/);
+  assert.match(pdf, /consent_logo_path/);
+  assert.match(pdf, /Download PDF/);
+  assert.match(pdf, /document\.querySelectorAll\('\[data-mail\]'\)\.forEach\(el=>el\.remove\(\)\)/);
+  assert.match(pdf, /page\.drawText\('SIGNED DENTAL CONSENT'/);
 });
 
 test("Consent audit RPC is not callable by anonymous users", async () => {

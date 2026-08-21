@@ -1,8 +1,11 @@
-const CACHE='dentmemo-consent-shell-v5';
-const SHELL=['/','/offline.html','/app.js','/google-auth.js','/function-auth-patch.js','/letterhead-settings.js','/manifest.webmanifest','/icon.svg'];
-const ESM='https://esm.sh/@supabase/supabase-js@2.112.3?bundle';
+const CACHE='dentmemo-consent-shell-v6';
+const SHELL=['/','/offline.html','/app.js','/google-auth.js','/function-auth-patch.js','/letterhead-settings.js','/professional-pdf.js','/manifest.webmanifest','/icon.svg'];
+const EXTERNAL=['https://esm.sh/@supabase/supabase-js@2.112.3?bundle','https://esm.sh/pdf-lib@1.17.1?bundle'];
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(async cache=>{await cache.addAll(SHELL);try{const res=await fetch(ESM);if(res.ok)await cache.put(ESM,res.clone())}catch{} }).then(()=>self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then(async cache=>{
+    await cache.addAll(SHELL);
+    for(const url of EXTERNAL){try{const res=await fetch(url);if(res.ok)await cache.put(url,res.clone())}catch{}}
+  }).then(()=>self.skipWaiting()));
 });
 self.addEventListener('activate',event=>{
   event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
