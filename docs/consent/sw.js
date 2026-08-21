@@ -1,5 +1,5 @@
-const CACHE='dentmemo-consent-shell-v1';
-const SHELL=['/','/offline.html','/app.js','/manifest.webmanifest','/icon.svg'];
+const CACHE='dentmemo-consent-shell-v2';
+const SHELL=['/','/offline.html','/app.js','/google-auth.js','/manifest.webmanifest','/icon.svg'];
 const ESM='https://esm.sh/@supabase/supabase-js@2.112.3?bundle';
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(async cache=>{await cache.addAll(SHELL);try{const res=await fetch(ESM);if(res.ok)await cache.put(ESM,res.clone())}catch{} }).then(()=>self.skipWaiting()));
