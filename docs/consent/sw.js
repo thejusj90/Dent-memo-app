@@ -1,4 +1,4 @@
-const CACHE='dentmemo-consent-shell-v4';
+const CACHE='dentmemo-consent-shell-v5';
 const SHELL=['/','/offline.html','/app.js','/google-auth.js','/function-auth-patch.js','/letterhead-settings.js','/manifest.webmanifest','/icon.svg'];
 const ESM='https://esm.sh/@supabase/supabase-js@2.112.3?bundle';
 self.addEventListener('install',event=>{
