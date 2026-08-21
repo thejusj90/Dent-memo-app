@@ -1,47 +1,76 @@
 (()=>{
   const nativeFetch=window.fetch.bind(window);
-  const projectRef='qcwsmepvucxtqgqohuqe';
-  const publishableKey='sb_publishable_O9bkwJ1Qq3Kvpf2w7oS1zQ_bDAMe-sk';
+  const EMAIL_PATH='/functions/v1/consent-email';
+  const DB_NAME='dentmemo-consent-offline-v1';
 
-  function currentAccessToken(){
-    try{
-      const candidates=[];
-      const exact=localStorage.getItem(`sb-${projectRef}-auth-token`);
-      if(exact)candidates.push(exact);
-      for(let i=0;i<localStorage.length;i++){
-        const key=localStorage.key(i)||'';
-        if(key.startsWith('sb-')&&key.endsWith('-auth-token')&&key!==`sb-${projectRef}-auth-token`){
-          const value=localStorage.getItem(key);
-          if(value)candidates.push(value);
-        }
-      }
-      for(const raw of candidates){
-        try{
-          const parsed=JSON.parse(raw);
-          const token=parsed?.access_token||parsed?.currentSession?.access_token||parsed?.session?.access_token;
-          if(token)return token;
-        }catch{}
-      }
-    }catch{}
-    return null;
-  }
-
+  // Email delivery has been removed from DentMemo Consent.
+  // Old cached clients may still attempt to call the former Edge Function;
+  // treat those calls as a successful no-op so their legacy retry queue clears.
   window.fetch=async function(input,init={}){
     const url=typeof input==='string'?input:(input?.url||'');
-    if(url.includes(`${projectRef}.supabase.co/functions/v1/consent-email`)){
-      const token=currentAccessToken();
-      if(token){
-        const headers=new Headers(input instanceof Request?input.headers:undefined);
-        if(init?.headers)new Headers(init.headers).forEach((value,key)=>headers.set(key,value));
-        headers.set('Authorization',`Bearer ${token}`);
-        headers.set('apikey',publishableKey);
-        if(input instanceof Request){
-          const request=new Request(input,{...init,headers});
-          return nativeFetch(request);
-        }
-        return nativeFetch(input,{...init,headers});
-      }
+    if(url.includes(EMAIL_PATH)){
+      return new Response(JSON.stringify({ok:true,emailFeatureRemoved:true}),{
+        status:200,
+        headers:{'Content-Type':'application/json'}
+      });
     }
     return nativeFetch(input,init);
   };
+
+  function clearLegacyEmailQueue(){
+    try{
+      const req=indexedDB.open(DB_NAME);
+      req.onsuccess=()=>{
+        const db=req.result;
+        if(!db.objectStoreNames.contains('emails')){db.close();return;}
+        const tx=db.transaction('emails','readwrite');
+        tx.objectStore('emails').clear();
+        tx.oncomplete=()=>db.close();
+        tx.onerror=()=>db.close();
+      };
+    }catch{}
+  }
+
+  function removeEmailUi(){
+    // Remove resend actions.
+    document.querySelectorAll('[data-mail]').forEach(el=>el.remove());
+
+    // Remove legacy retry indicator in the sync bar.
+    document.querySelectorAll('.status-warn').forEach(el=>{
+      if(/email retry/i.test(el.textContent||'')) el.remove();
+    });
+
+    // Records now describe the signed PDF as securely stored, not emailed.
+    document.querySelectorAll('.row').forEach(row=>{
+      const pdfButton=row.querySelector('[data-pdf]');
+      if(pdfButton){
+        const third=row.children?.[2];
+        const small=third?.querySelector?.('small');
+        if(small) small.textContent='Stored securely';
+      }
+      row.querySelectorAll('.badge').forEach(badge=>{
+        const value=(badge.textContent||'').trim().toLowerCase();
+        if(['pending','failed','sent'].includes(value)) badge.textContent='Stored';
+      });
+
+      // Hide historical email-only audit rows from the product UI.
+      const title=row.querySelector('div:nth-child(2) b');
+      if(title && /^email\s/i.test((title.textContent||'').trim())) row.style.display='none';
+    });
+
+    // Doctor email is no longer required for PDF delivery.
+    document.querySelectorAll('label').forEach(label=>{
+      if(/email for signed pdfs/i.test(label.textContent||'')){
+        const input=label.querySelector('input[type="email"]');
+        if(input) input.required=false;
+        for(const node of label.childNodes){
+          if(node.nodeType===Node.TEXT_NODE){node.textContent='Doctor email (optional)';break;}
+        }
+      }
+    });
+  }
+
+  clearLegacyEmailQueue();
+  document.addEventListener('DOMContentLoaded',removeEmailUi);
+  new MutationObserver(removeEmailUi).observe(document.documentElement,{childList:true,subtree:true});
 })();
