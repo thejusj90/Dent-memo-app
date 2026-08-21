@@ -32,15 +32,12 @@
   }
 
   function removeEmailUi(){
-    // Remove resend actions.
     document.querySelectorAll('[data-mail]').forEach(el=>el.remove());
 
-    // Remove legacy retry indicator in the sync bar.
     document.querySelectorAll('.status-warn').forEach(el=>{
       if(/email retry/i.test(el.textContent||'')) el.remove();
     });
 
-    // Records now describe the signed PDF as securely stored, not emailed.
     document.querySelectorAll('.row').forEach(row=>{
       const pdfButton=row.querySelector('[data-pdf]');
       if(pdfButton){
@@ -50,15 +47,13 @@
       }
       row.querySelectorAll('.badge').forEach(badge=>{
         const value=(badge.textContent||'').trim().toLowerCase();
-        if(['pending','failed','sent'].includes(value)) badge.textContent='Stored';
+        if(['pending','failed','sent','not_applicable'].includes(value)) badge.textContent='Stored';
       });
 
-      // Hide historical email-only audit rows from the product UI.
       const title=row.querySelector('div:nth-child(2) b');
       if(title && /^email\s/i.test((title.textContent||'').trim())) row.style.display='none';
     });
 
-    // Doctor email is no longer required for PDF delivery.
     document.querySelectorAll('label').forEach(label=>{
       if(/email for signed pdfs/i.test(label.textContent||'')){
         const input=label.querySelector('input[type="email"]');
